@@ -37,10 +37,15 @@ def _build_job_def(image: str, texts: list[str]) -> dict:
                 "args": {
                     "image": image,
                     "cmd": [
-                        "curl", "-s", "-X", "POST",
+                        "curl",
+                        "-s",
+                        "-X",
+                        "POST",
                         "http://localhost:8000/embed",
-                        "-H", "Content-Type: application/json",
-                        "-d", json.dumps({"texts": texts, "model": "all-mpnet-base-v2"}),
+                        "-H",
+                        "Content-Type: application/json",
+                        "-d",
+                        json.dumps({"texts": texts, "model": "all-mpnet-base-v2"}),
                     ],
                     "gpu": True,
                     "timeout": 120,
@@ -62,7 +67,9 @@ async def run_benchmark(count: int, text_batch_size: int) -> None:
     )
     backend = NosanaRestBackend(config)
 
-    sample_texts = [f"INBOUND 100.00 USDC 2026-06-24 | Sample tx {i}" for i in range(text_batch_size)]
+    sample_texts = [
+        f"INBOUND 100.00 USDC 2026-06-24 | Sample tx {i}" for i in range(text_batch_size)
+    ]
     job_def = _build_job_def(os.environ["WORKER_IMAGE"], sample_texts)
 
     costs: list[Decimal] = []

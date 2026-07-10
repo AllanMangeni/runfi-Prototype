@@ -84,10 +84,15 @@ def embed_remote(texts: list[str]) -> list[list[float]]:
                 "args": {
                     "image": os.environ["WORKER_IMAGE"],
                     "cmd": [
-                        "curl", "-s", "-X", "POST",
+                        "curl",
+                        "-s",
+                        "-X",
+                        "POST",
                         "http://localhost:8000/embed",
-                        "-H", "Content-Type: application/json",
-                        "-d", json.dumps({"texts": texts, "model": "all-mpnet-base-v2"}),
+                        "-H",
+                        "Content-Type: application/json",
+                        "-d",
+                        json.dumps({"texts": texts, "model": "all-mpnet-base-v2"}),
                     ],
                     "gpu": True,
                     "timeout": 120,
@@ -123,7 +128,9 @@ def embed_remote(texts: list[str]) -> list[list[float]]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Demonstrate embedding similarity via Nosana compute")
+    parser = argparse.ArgumentParser(
+        description="Demonstrate embedding similarity via Nosana compute"
+    )
     parser.add_argument("--local", action="store_true", help="Use local inference container")
     parser.add_argument("--remote", action="store_true", help="Submit to Nosana")
     args = parser.parse_args()

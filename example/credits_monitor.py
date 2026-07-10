@@ -31,7 +31,11 @@ async def check_balance(config: NosanaConfig) -> None:
         assigned = balance.get("assignedCredits", "N/A")
         reserved = balance.get("reservedCredits", "N/A")
         settled = balance.get("settledCredits", "N/A")
-        available = assigned - reserved if isinstance(assigned, (int, float)) and isinstance(reserved, (int, float)) else "N/A"
+        available = (
+            assigned - reserved
+            if isinstance(assigned, (int, float)) and isinstance(reserved, (int, float))
+            else "N/A"
+        )
 
         print(f"  Assigned:  ${assigned}")
         print(f"  Reserved:  ${reserved}")
@@ -62,7 +66,7 @@ def main() -> None:
     api_key = os.environ.get("NOSANA_API_KEY")
     if not api_key:
         print("Error: NOSANA_API_KEY environment variable is required.")
-        print("  export NOSANA_API_KEY=\"nos_...\"")
+        print('  export NOSANA_API_KEY="nos_..."')
         return
 
     config = NosanaConfig(api_key=api_key, ipfs_jwt="")

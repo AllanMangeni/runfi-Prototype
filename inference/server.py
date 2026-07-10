@@ -200,7 +200,7 @@ def _parse_llm_response(response_text: str, prompt: str) -> dict[str, Any]:
     import json
     import re
 
-    json_match = re.search(r"\{[^}]+\}", response_text[len(prompt):])
+    json_match = re.search(r"\{[^}]+\}", response_text[len(prompt) :])
     if json_match:
         try:
             return json.loads(json_match.group())

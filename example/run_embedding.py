@@ -42,16 +42,23 @@ async def main() -> None:
                 "args": {
                     "image": os.environ["WORKER_IMAGE"],
                     "cmd": [
-                        "curl", "-s", "-X", "POST",
+                        "curl",
+                        "-s",
+                        "-X",
+                        "POST",
                         "http://localhost:8000/embed",
-                        "-H", "Content-Type: application/json",
-                        "-d", json.dumps({
-                            "texts": [
-                                "INBOUND 100.00 USDC 2026-06-24 | Payment received",
-                                "OUTBOUND 50.00 USDC 2026-06-24 | Transfer sent",
-                            ],
-                            "model": "all-mpnet-base-v2",
-                        }),
+                        "-H",
+                        "Content-Type: application/json",
+                        "-d",
+                        json.dumps(
+                            {
+                                "texts": [
+                                    "INBOUND 100.00 USDC 2026-06-24 | Payment received",
+                                    "OUTBOUND 50.00 USDC 2026-06-24 | Transfer sent",
+                                ],
+                                "model": "all-mpnet-base-v2",
+                            }
+                        ),
                     ],
                     "gpu": True,
                     "timeout": 120,

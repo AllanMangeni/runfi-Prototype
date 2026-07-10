@@ -1,0 +1,11 @@
+services:
+  inference:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - EMBEDDING_MODEL=sentence-transformers/all-mpnet-base-v2
+      - LLM_MODEL=Qwen/Qwen2.5-3B-Instruct
+    entrypoint: ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]

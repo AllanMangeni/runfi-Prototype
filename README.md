@@ -1,32 +1,54 @@
-# Nosana Decentralised Compute — Integration Prototype
+# Nosana Decentralised Compute — Integration Reference
 
-This repository demonstrates a production-grade integration with the **Nosana
-decentralised GPU network** for ML inference workloads. It is a focused,
-standalone extract of the Nosana integration layer, showing how to submit
-embedding and LLM inference jobs to Nosana GPU nodes, poll for results,
-handle fallback, and serve models via a Dockerised inference container.
+> **This repository is a focused, technical reference for the Nosana
+> decentralised GPU compute integration extracted from the Run-Fi
+> reconciliation platform. It is not the Run-Fi product itself.**
+> The Run-Fi platform — including its matching engine, adapters, data schema,
+> API surface, and commercial strategy — remains proprietary and is not
+> included here.
 
-## Architecture
+This repo demonstrates a production-grade integration with the **Nosana
+decentralised GPU network** for ML inference workloads. It covers job dispatch,
+IPFS pinning, polling, result retrieval, automatic fallback, and a deployable
+inference container — all the infrastructure plumbing needed to run embedding
+and LLM inference on Nosana GPU nodes.
 
+## Compute architecture
+
+```mermaid
+flowchart LR
+    subgraph Client["Your Application"]
+        OC[ComputeOrchestrator]
+    end
+
+    subgraph Nosana["Nosana Network"]
+        direction TB
+        API["POST /api/jobs/list"]
+        JOB["GPU Node<br/>(16GB VRAM)"]
+        POLL["GET /api/jobs/{address}"]
+    end
+
+    subgraph Infra["Infrastructure"]
+        IPFS["IPFS Pin<br/>(Pinata)"]
+        RESULT["Result on IPFS"]
+    end
+
+    OC -- "1. pin job def" --> IPFS
+    IPFS -- "2. CID" --> OC
+    OC -- "3. submit CID" --> API
+    API -- "4. dispatch" --> JOB
+    JOB -- "5. runs container" --> RESULT
+    OC -- "6. poll until COMPLETED" --> POLL
+    POLL -- "7. result CID" --> OC
+    OC -- "8. retrieve" --> RESULT
 ```
-Your application
-    |
-    v
-ComputeOrchestrator  -- selects backend --
-    |                      |
-    v                      v
-NosanaRestBackend    NosanaOnchainBackend
-(credits, live)      (NOS tokens, stubbed)
-    |
-    v
-[Pinata IPFS pin] --> POST /api/jobs/list --> Nosana GPU node
-    |
-    v
-poll GET /api/jobs/{address} until COMPLETED
-    |
-    v
-IPFS result retrieved
-```
+
+Two compute backends are supported behind the `ComputeBackend` interface:
+
+| Backend | Auth | Payment | Status |
+|---|---|---|---|
+| **REST (credits)** | API key (`nos_xxx`) | Dashboard credits | Live (`src/compute/nosana_client.py`) |
+| **On-chain (NOS tokens)** | Solana wallet | NOS tokens | Stubbed, deferred (`src/compute/nosana_onchain.py`) |
 
 ## Repository structure
 
@@ -41,10 +63,14 @@ inference/
   server.py            # FastAPI server (POST /embed, POST /resolve)
   entrypoint.sh        # Container entrypoint
   requirements.txt     # Inference dependencies
+  docker-compose.yml   # Run the inference container locally
 nosana/
   job.json             # Nosana deployment job template
 example/
-  run_embedding.py     # End-to-end example: submit + poll + retrieve
+  run_embedding.py     # End-to-end: submit + poll + retrieve
+  similarity_demo.py   # Embedding similarity via Nosana compute
+  cost_benchmark.py    # Measure real credit cost per embedding
+  credits_monitor.py   # Check remaining dashboard credits
 docs/
   nosana-integration.md # Full technical reference
 ```
@@ -56,7 +82,7 @@ docs/
 - Python 3.11+
 - A [Nosana dashboard](https://deploy.nosana.com) account with API key
 - A [Pinata](https://pinata.cloud) account with JWT for IPFS pinning
-- Docker (to build and push the inference container)
+- Docker (to build and test the inference container locally)
 
 ### 2. Install client dependencies
 
@@ -64,14 +90,24 @@ docs/
 pip install -r requirements.txt
 ```
 
-### 3. Build and push the inference container
+### 3. Test the inference container locally
+
+```bash
+cd inference
+docker compose up
+curl -X POST http://localhost:8000/embed \
+  -H "Content-Type: application/json" \
+  -d '{"texts": ["Sample transaction"]}'
+```
+
+### 4. Build and push for Nosana
 
 ```bash
 docker build -t your-registry/inference:0.1.0 ./inference
 docker push your-registry/inference:0.1.0
 ```
 
-### 4. Run the example
+### 5. Run the end-to-end example
 
 ```bash
 export NOSANA_API_KEY="nos_..."
@@ -82,11 +118,20 @@ export WORKER_IMAGE="your-registry/inference:0.1.0"
 python example/run_embedding.py
 ```
 
+## Examples
+
+| Script | What it does |
+|---|---|
+| `example/run_embedding.py` | Full end-to-end: pin job def, submit to Nosana, poll, retrieve result |
+| `example/similarity_demo.py` | Generate embeddings for two texts, compute cosine similarity |
+| `example/cost_benchmark.py` | Submit N embedding jobs, aggregate credit cost per embedding |
+| `example/credits_monitor.py` | Check remaining Nosana dashboard credits |
+
 ## Key design decisions
 
 - **Polling over webhooks** — Nosana's REST API does not offer webhooks; the
-  client polls `GET /api/jobs/{address}` every 2s until terminal (Rule Q-1:
-  verified against source).
+  client polls `GET /api/jobs/{address}` every 2s until terminal (verified
+  against `@nosana/api@2.6.1` source).
 - **IPFS via Pinata** — Job definitions are pinned to IPFS before posting.
   This is a Nosana requirement, not a dashboard route.
 - **API schema over docs** — docs.nosana.io diverges from the actual API in
@@ -113,4 +158,4 @@ All routes verified against `@nosana/api@2.6.1` source:
 
 ## Licence
 
-Apache 2.0
+Apache 2.0 — see [LICENSE](LICENSE).

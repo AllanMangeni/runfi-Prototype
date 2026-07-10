@@ -1,0 +1,26 @@
+{
+  "version": "0.1",
+  "type": "container",
+  "ops": [
+    {
+      "type": "container/run",
+      "id": "inference-job",
+      "args": {
+        "image": "${WORKER_IMAGE}",
+        "cmd": [],
+        "gpu": true,
+        "timeout": 120,
+        "env": {
+          "EMBEDDING_MODEL": "sentence-transformers/all-mpnet-base-v2",
+          "LLM_MODEL": "Qwen/Qwen2.5-3B-Instruct"
+        }
+      }
+    }
+  ],
+  "meta": {
+    "trigger": "deployment-manager",
+    "system_requirements": {
+      "vram_total_mb": 16384
+    }
+  }
+}

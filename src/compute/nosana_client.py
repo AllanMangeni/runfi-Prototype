@@ -107,9 +107,7 @@ class NosanaRestBackend(ComputeBackendABC):
         """
         jwt = self._config.ipfs_jwt
         if not jwt:
-            raise ComputeError(
-                "ipfs_jwt is required to pin job definitions to IPFS via Pinata."
-            )
+            raise ComputeError("ipfs_jwt is required to pin job definitions to IPFS via Pinata.")
         async with httpx.AsyncClient(
             base_url=self._pinata_base_url,
             headers={"Authorization": f"Bearer {jwt}"},

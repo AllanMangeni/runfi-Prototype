@@ -13,7 +13,6 @@ from src.compute.base import (
     ComputeError,
     JobResult,
     JobSpec,
-    JobState,
     JobTimeoutError,
     poll_until_completed,
 )
